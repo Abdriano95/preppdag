@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Inköpslista, recept och veckoplan för matlådorna">
+<meta name="theme-color" content="#EEF2EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1311" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Preppdag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: matlådelock. Sticky rad med tre färgkodade lock (A/B/C) överst, kvittolik lista i mitten, flikrad inom tumavstånd längst ner. */
+:root{
+  --bg:#EEF2EE; --surface:#FFFFFF; --sunk:#E2E8E3; --ink:#17201B; --muted:#56655E; --line:#D3DCD5;
+  --a:#966400; --b:#2D6E44; --c:#B03A26; --on-accent:#FFFFFF;
+  --accent:var(--a);
+  --font-display:'Bricolage Grotesque','Avenir Next',system-ui,sans-serif;
+  --font-body:'Atkinson Hyperlegible',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1311; --surface:#161D19; --sunk:#1F2823; --ink:#E5ECE7; --muted:#95A49C; --line:#29342E;
+    --a:#E2AB42; --b:#74BF88; --c:#F08169; --on-accent:#0E1311; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1311; --surface:#161D19; --sunk:#1F2823; --ink:#E5ECE7; --muted:#95A49C; --line:#29342E;
+  --a:#E2AB42; --b:#74BF88; --c:#F08169; --on-accent:#0E1311; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); font-size:16px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+  --accent-soft:color-mix(in srgb, var(--accent) 13%, var(--surface));
+}
+body[data-combo="B"]{--accent:var(--b)}
+body[data-combo="C"]{--accent:var(--c)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin-inline:auto;padding-inline:16px}
+
+/* Topp */
+.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;padding-block:14px 2px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:21px;letter-spacing:-.015em;display:flex;align-items:center;gap:8px}
+.brand i{display:block;width:14px;height:6px;border-radius:2px;background:var(--accent)}
+.when{font-size:13px;color:var(--muted)}
+.when.today{color:var(--accent);font-weight:700}
+
+/* Locken */
+.lidbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.lids{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-block:14px 12px}
+.lid{
+  position:relative;appearance:none;-webkit-appearance:none;cursor:pointer;text-align:left;
+  background:var(--surface);border:1.5px solid var(--line);border-radius:12px;
+  padding:9px 10px 10px;display:grid;gap:3px;min-width:0;
+}
+.lid::before{content:"";position:absolute;top:-4px;left:12px;width:26px;height:7px;border-radius:3px;background:var(--lid)}
+.lid .letter{font-family:var(--font-display);font-weight:800;font-size:27px;line-height:1;color:var(--lid)}
+.lid .dishes{font-size:12px;line-height:1.25;color:var(--muted);overflow-wrap:anywhere}
+.lid[aria-pressed="true"]{border-color:var(--lid);background:color-mix(in srgb, var(--lid) 12%, var(--surface));box-shadow:inset 0 -3px 0 var(--lid)}
+.lid[aria-pressed="true"] .dishes{color:var(--ink)}
+
+main{padding-block:18px 96px}
+.view{display:grid;gap:16px}
+
+/* Typ */
+.eyebrow,.h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted);margin:0}
+.h1{font-family:var(--font-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:4px 0 0;text-wrap:balance}
+.h2{font-family:var(--font-display);font-weight:800;font-size:23px;line-height:1.12;letter-spacing:-.012em;margin:0;text-wrap:balance}
+.sub,.lead{color:var(--muted);margin:6px 0 0}
+.lead{font-size:16px;max-width:62ch}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.meta{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+
+/* Progress */
+.progress{height:6px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.progress span{display:block;height:100%;background:var(--accent);border-radius:inherit;transition:width .25s ease}
+
+/* Lista */
+.group{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.group-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:13px 14px 9px}
+.group-note{font-size:13px;color:var(--muted);padding:0 14px 10px;margin:-4px 0 0}
+.item{position:relative;display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 14px;border-top:1px solid var(--line);cursor:pointer;min-height:54px}
+.item input,.switch-row input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+.box{width:26px;height:26px;border-radius:8px;border:2px solid color-mix(in srgb, var(--muted) 55%, var(--line));display:grid;place-items:center;transition:background .15s,border-color .15s}
+.box svg{width:16px;height:16px;fill:none;stroke:var(--on-accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);transition:opacity .15s,transform .15s}
+.item input:checked + .box{background:var(--accent);border-color:var(--accent)}
+.item input:checked + .box svg{opacity:1;transform:none}
+.item input:focus-visible + .box{outline:2px solid var(--accent);outline-offset:2px}
+.item input:checked ~ .txt .name{text-decoration:line-through;color:var(--muted)}
+.item input:checked ~ .txt .alt,.item input:checked ~ .txt .tags{opacity:.6}
+.item input:checked ~ .amt{color:var(--muted)}
+.txt{min-width:0;padding-top:1px}
+.name{font-weight:700;line-height:1.3}
+.alt{display:block;font-size:13px;color:var(--muted);line-height:1.3;margin-top:2px}
+.tags{display:block;font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;letter-spacing:.01em}
+.amt{font-family:var(--font-mono);font-size:14px;text-align:right;padding-top:2px;max-width:9.5em;font-variant-numeric:tabular-nums;line-height:1.3}
+
+/* Sötsug-panel i listan */
+.extras{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.extras summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;min-height:54px}
+.extras summary::-webkit-details-marker{display:none}
+.extras summary svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.extras[open] summary svg{transform:rotate(180deg)}
+.extras-body{display:grid;border-top:1px solid var(--line)}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px}
+.srow + .srow{border-top:1px solid var(--line)}
+.stepper{display:flex;align-items:center;gap:4px;flex:none}
+.stepper button{appearance:none;width:40px;height:40px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper output{min-width:2ch;text-align:center;font-family:var(--font-mono);font-size:17px}
+.switch-row{position:relative;cursor:pointer}
+.track{flex:none;width:50px;height:30px;border-radius:99px;background:var(--sunk);border:1px solid var(--line);position:relative;transition:background .2s}
+.track::after{content:"";position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgb(0 0 0 / .25);transition:transform .2s}
+.switch-row input:checked + .track{background:var(--accent);border-color:var(--accent)}
+.switch-row input:checked + .track::after{transform:translateX(20px)}
+.switch-row input:focus-visible + .track{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Egna varor */
+.add-form{display:grid;gap:12px;padding:12px 14px 14px;border-top:1px solid var(--line)}
+.fl{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:5px}
+.field{display:block;width:100%;min-width:0;min-height:46px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px}
+.field:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.add-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:8px}
+.add-weekly{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.item-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;border-top:1px solid var(--line)}
+.item-wrap .item{border-top:0;padding-right:4px}
+.del{appearance:none;border:0;background:transparent;color:var(--muted);width:44px;height:44px;margin:5px 6px 0 0;border-radius:10px;display:grid;place-items:center;cursor:pointer}
+.del:hover{background:var(--sunk);color:var(--ink)}
+.del svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.toast button{appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px;margin-left:12px;padding:4px 2px;cursor:pointer}
+
+/* Knappar */
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.btn{appearance:none;cursor:pointer;font-weight:700;font-size:15px;line-height:1.2;border-radius:12px;padding:12px 14px;min-height:50px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.armed{border-color:var(--c);color:var(--c)}
+.link{appearance:none;background:none;border:0;padding:0;cursor:pointer;color:var(--accent);font-weight:700;text-decoration:underline;text-underline-offset:2px;font-family:var(--font-body);font-size:12px}
+.pill{appearance:none;cursor:pointer;flex:none;border:1.5px solid var(--line);background:var(--surface);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.pill[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.pill[aria-pressed="true"] i{background:var(--accent)}
+.copybox{display:grid;gap:8px}
+.copybox textarea{width:100%;font-family:var(--font-mono);font-size:16px;line-height:1.4;border:1.5px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);color:var(--ink);resize:vertical}
+
+/* Recept */
+.rhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.rhead > div{min-width:0}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:var(--sunk);padding:4px;border-radius:14px}
+.seg button{appearance:none;border:0;background:transparent;border-radius:10px;padding:8px 10px;text-align:left;cursor:pointer;display:grid;gap:1px;min-width:0;color:var(--muted)}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .1)}
+.seg-k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.seg button[aria-selected="true"] .seg-k{color:var(--accent)}
+.seg-n{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;display:grid;gap:18px;min-width:0}
+.card-h{display:grid;gap:8px}
+.block{display:grid;gap:8px}
+.block-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--font-mono);font-size:12px;padding:4px 9px;border-radius:99px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.ing{list-style:none;margin:0;padding:0;display:grid}
+.ing li{display:grid;grid-template-columns:5.8em minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px dashed var(--line)}
+.ing li:first-child{border-top:0}
+.ing .ia{font-family:var(--font-mono);font-size:13px;color:var(--accent);padding-top:2px;font-variant-numeric:tabular-nums}
+.ing li.ing-g{display:block;border-top:0;padding:14px 0 2px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ink)}
+.ing li.ing-g + li{border-top:0}
+.steps{list-style:none;margin:0 -8px;padding:0;display:grid;gap:2px}
+.step{appearance:none;width:100%;text-align:left;background:transparent;border:0;border-radius:12px;padding:10px 8px;display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;cursor:pointer}
+.step:active{background:var(--accent-soft)}
+.num{width:30px;height:30px;border-radius:50%;border:2px solid var(--accent);color:var(--accent);display:grid;place-items:center;font-family:var(--font-mono);font-size:13px;transition:background .15s}
+.num svg{width:14px;height:14px;fill:none;stroke:var(--on-accent);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.step.is-done .num{background:var(--accent)}
+.step.is-done .stxt{color:var(--muted)}
+.stxt{padding-top:3px}
+.stxt b{font-weight:700}
+.tip{margin:0;background:var(--accent-soft);border-radius:12px;padding:12px 14px;font-size:15px}
+
+/* Sötsug */
+.intro{display:grid;gap:2px}
+.swaps{margin:0;display:grid}
+.swap{display:grid;gap:4px;padding:12px 0;border-top:1px solid var(--line)}
+.swap:first-child{border-top:0;padding-top:0}
+.swap dt{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 8px;font-weight:700}
+.swap dt s{color:var(--muted);font-weight:400}
+.swap dt span{color:var(--accent)}
+.swap dd{margin:0;color:var(--muted);font-size:15px}
+.why{margin:0;font-size:15px;border-left:3px solid var(--accent);padding:2px 0 2px 12px}
+
+/* Veckan */
+.timeline{display:grid}
+.tl{display:grid;grid-template-columns:6.6em minmax(0,1fr);gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.tl:first-child{border-top:0;padding-top:0}
+.tl-when{font-family:var(--font-mono);font-size:13px;color:var(--accent);padding-top:2px}
+.tl-t{font-weight:700}
+.tl p{margin:2px 0 0;color:var(--muted);font-size:15px}
+.rot{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rot-i{position:relative;border:1.5px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:3px;align-content:start;min-width:0}
+.rot-i .letter{font-family:var(--font-display);font-weight:800;font-size:24px;line-height:1;color:var(--lid)}
+.rot-w{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.rot-d{font-size:12px;color:var(--muted);line-height:1.25;overflow-wrap:anywhere}
+.rot-i.is-now{border-color:var(--lid);background:color-mix(in srgb, var(--lid) 12%, var(--surface))}
+.rot-i.is-now .rot-d{color:var(--ink)}
+.now{font-size:11px;font-weight:700;color:var(--lid)}
+.day{margin:0;display:grid}
+.day-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.day-r:first-child{border-top:0;padding-top:0}
+.day-r dt{font-weight:700;min-width:0}
+.day-r dt span{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:1px}
+.day-r dd{margin:0;font-family:var(--font-mono);font-size:14px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.day-r.sum{border-top:2px solid var(--ink);padding-top:12px}
+.day-r.sum dt{font-family:var(--font-display);font-weight:800;font-size:19px;line-height:1.2}
+.day-r.sum dd{font-size:17px;color:var(--accent)}
+.day-r.sum dd span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+
+/* Flikrad */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar .wrap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding-inline:8px}
+.tab{appearance:none;border:0;background:transparent;cursor:pointer;color:var(--muted);display:grid;justify-items:center;gap:3px;padding:9px 0 10px;font-size:11px;font-weight:700;letter-spacing:.02em}
+.tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-selected="true"]{color:var(--accent)}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:11;margin-inline:auto;max-width:420px;background:var(--ink);color:var(--bg);padding:12px 14px;border-radius:12px;font-size:14px;font-weight:700;text-align:center;box-shadow:0 6px 20px rgb(0 0 0 / .2)}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top wrap">
+  <div class="brand"><i aria-hidden="true"></i>Preppdag</div>
+  <div class="when" id="when"></div>
+</header>
+<div class="lidbar"><div class="wrap lids" id="lids" role="group" aria-label="Välj kombo"></div></div>
+
+<main class="wrap">
+  <section class="view" id="view-handla" aria-label="Inköpslista"></section>
+  <section class="view" id="view-recept" aria-label="Recept" hidden></section>
+  <section class="view" id="view-sotsug" aria-label="Sötsug och te" hidden></section>
+  <section class="view" id="view-veckan" aria-label="Veckan" hidden></section>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<nav class="tabbar" aria-label="Flikar">
+  <div class="wrap" role="tablist">
+    <button class="tab" role="tab" data-act="tab" data-tab="handla" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9h17l-1.6 9.6a2 2 0 0 1-2 1.7H7.1a2 2 0 0 1-2-1.7z"/><path d="M8 9l3.2-5M16 9l-3.2-5M9 13v3.5M15 13v3.5"/></svg>
+      Handla
+    </button>
+    <button class="tab" role="tab" data-act="tab" data-tab="recept" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v4.5a4.5 4.5 0 0 1-4.5 4.5h-7A4.5 4.5 0 0 1 4 15.5z"/><path d="M2 11h2M20 11h2M9 7.5c0-1.2 1.2-1.3 1.2-2.5M13.8 7.5c0-1.2 1.2-1.3 1.2-2.5"/></svg>
+      Recept
+    </button>
+    <button class="tab" role="tab" data-act="tab" data-tab="sotsug" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 10h12v4.5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M16.5 11.5h1.2a2.3 2.3 0 0 1 0 4.6h-1.6M8.5 3.5v3M12.5 3.5v3"/></svg>
+      Sötsug
+    </button>
+    <button class="tab" role="tab" data-act="tab" data-tab="veckan" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17h2"/></svg>
+      Veckan
+    </button>
+  </div>
+</nav>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Data ---------- */
+
+const SECTIONS = [
+  {id:'kott', name:'Kött & fågel'},
+  {id:'gront', name:'Frukt & grönt'},
+  {id:'kyl', name:'Kyl · laktosfritt'},
+  {id:'frys', name:'Frys'},
+  {id:'skafferi', name:'Skafferi'},
+  {id:'bas', name:'Kryddor & basvaror', note:'Finns ofta hemma. Bocka av det du redan har.'},
+  {id:'ovrigt', name:'Hushåll & övrigt'}
+];
+
+// n = namn i listan, s = avdelning, alt = alternativ, qt = text när mängd saknas, more = text när mängd + "lite"
+const ITEMS = {
+  kycklingfile:{n:'Kycklingbröstfilé', s:'kott'},
+  kycklingfars:{n:'Kycklingfärs', s:'kott'},
+  notfars:{n:'Nötfärs', s:'kott', alt:'max 10 % fett'},
+  lovbiff:{n:'Lövbiff', s:'kott', alt:'eller tunnskuren nötytterfilé'},
+  potatis:{n:'Potatis', s:'gront'},
+  morotter:{n:'Morötter', s:'gront'},
+  gullok:{n:'Gul lök', s:'gront'},
+  paprika:{n:'Röd paprika', s:'gront'},
+  gurka:{n:'Gurka', s:'gront'},
+  vitlok:{n:'Vitlök', s:'gront'},
+  ingefara:{n:'Färsk ingefära', s:'gront', qt:'liten bit'},
+  matgradde:{n:'Laktosfri matlagningsgrädde', s:'kyl', alt:'eller Milda Mat 4 % laktosfri'},
+  fetaost:{n:'Laktosfri fetaost', s:'kyl'},
+  grekisk:{n:'Laktosfri grekisk yoghurt', s:'kyl', alt:'eller laktosfri kvarg 0 %'},
+  kvarg:{n:'Laktosfri kvarg', s:'kyl', alt:'eller laktosfri grekisk yoghurt 0 %'},
+  vaniljkvarg:{n:'Laktosfri vaniljkvarg', s:'kyl', alt:'utan tillsatt socker'},
+  mjolk:{n:'Laktosfri lättmjölk', s:'kyl', alt:'eller osötad mandel- eller sojadryck', qt:'till teet'},
+  agg:{n:'Ägg', s:'kyl'},
+  sojadryck:{n:'Sojadryck med chokladsmak', s:'kyl', alt:'med extra protein, t.ex. Alpro High Protein'},
+  wok:{n:'Frysta wokgrönsaker', s:'frys'},
+  broccoli:{n:'Broccoli', s:'frys', alt:'fryst eller färsk'},
+  artor:{n:'Frysta gröna ärtor', s:'frys'},
+  bar:{n:'Frysta bär', s:'frys', alt:'hallon, blåbär eller jordgubbar'},
+  ris:{n:'Basmatiris', s:'skafferi'},
+  nudlar:{n:'Äggnudlar', s:'skafferi'},
+  kokosmjolk:{n:'Kokosmjölk light', s:'skafferi', alt:'eller osötad sojagrädde / laktosfri matlagningsgrädde'},
+  currypasta:{n:'Röd eller gul currypasta', s:'skafferi'},
+  tomater:{n:'Krossade tomater', s:'skafferi', alt:'à 400 g'},
+  bonor:{n:'Svarta bönor eller kidneybönor', s:'skafferi', alt:'ca 250 g avrunnen vikt'},
+  fond:{n:'Mörk oxfond eller kalvfond', s:'skafferi', alt:'kolla att den är laktosfri'},
+  soya:{n:'Mörk soya', s:'skafferi', qt:'en skvätt'},
+  ostronsas:{n:'Ostronsås', s:'skafferi'},
+  majs:{n:'Majsstärkelse', s:'skafferi'},
+  kakao:{n:'Osötat kakao', s:'skafferi'},
+  jordnot:{n:'Jordnötssmör', s:'skafferi', alt:'eller jordnötspulver/PB2'},
+  chia:{n:'Chiafrön', s:'skafferi'},
+  olja:{n:'Rapsolja', s:'bas', qt:'till stekning'},
+  salt:{n:'Salt', s:'bas'},
+  peppar:{n:'Svartpeppar', s:'bas'},
+  paprikapulver:{n:'Paprikapulver', s:'bas'},
+  vitlokspulver:{n:'Vitlökspulver', s:'bas'},
+  timjan:{n:'Timjan', s:'bas'},
+  oregano:{n:'Torkad oregano', s:'bas'},
+  curry:{n:'Gul curry', s:'bas', alt:'currypulver'},
+  chilipulver:{n:'Chilipulver', s:'bas'},
+  spiskummin:{n:'Spiskummin', s:'bas'},
+  sotning:{n:'Sötningsmedel', s:'bas', alt:'flytande stevia, sukralos eller erytritol', qt:'efter smak', more:'efter smak'}
+};
+const ITEM_ORDER = Object.keys(ITEMS);
+
+// ing: t = rad i receptet, b = [nyckel, mängd|[min,max]|null, enhet, alternativ]
+const DISHES = {
+  wok:{
+    tag:'Wok', short:'Kycklingwok', meal:'Lunch', no:1, kcal:675, prot:64,
+    title:'Asiatisk kycklingwok med extra grönsaker & ris',
+    ing:[
+      {t:'1,2 kg kycklingbröstfilé (eller kycklinglårfilé utan skinn)', b:[['kycklingfile',1200,'g','eller kycklinglårfilé utan skinn']]},
+      {t:'600 g frysta wokgrönsaker (eller färsk broccoli, paprikamix och morötter)', b:[['wok',600,'g','eller färsk broccoli, paprikamix och morötter']]},
+      {t:'500 ml kokosmjölk light (eller osötad sojagrädde/laktosfri matlagningsgrädde)', b:[['kokosmjolk',500,'ml']]},
+      {t:'3–4 tsk röd eller gul currypasta', b:[['currypasta',[3,4],'tsk']]},
+      {t:'350 g okokt basmatiris (ca 190 g kokt ris per portion)', b:[['ris',350,'g']]},
+      {t:'Salt och peppar', b:[['salt'],['peppar']]},
+      {t:'1 msk rapsolja till stekning', b:[['olja',1,'msk']]}
+    ],
+    steps:[
+      {t:'Koka riset enligt anvisningen på förpackningen.'},
+      {t:'Skär kycklingen i jämnstora munsbitar. Värm 1 msk olja i en stor wok eller djup stekpanna.'},
+      {t:'Stek kycklingen med salt och peppar tills den har fått fin yta och är nästan helt genomstekt.'},
+      {t:'Rör ner currypastan och låt den fräsa med kycklingen i 1 minut så att smakerna blommar ut.'},
+      {t:'Tillsätt wokgrönsakerna och låt dem fräsa med i 3–4 minuter.'},
+      {t:'Häll på kokosmjölken. Låt sjuda i 5–7 minuter tills kycklingen är helt genomstekt och grönsakerna är mör-krispiga.'},
+      {t:'Fördela riset och kycklingwoken i 5 matlådor.'}
+    ]
+  },
+  farsgryta:{
+    tag:'Färsgryta', short:'Nötfärsgryta', meal:'Kväll', no:2, kcal:600, prot:48,
+    title:'Kryddig nötfärsgryta med karamelliserad lök, ugnsrostad potatis & rotfrukter',
+    ing:[
+      {t:'1 kg nötfärs (max 10 % fett)', b:[['notfars',1000,'g']]},
+      {t:'800 g potatis', b:[['potatis',800,'g']]},
+      {t:'400 g morötter', b:[['morotter',400,'g']]},
+      {t:'3–4 gula lökar', b:[['gullok',[3,4],'st']]},
+      {t:'300 g frysta gröna ärtor', b:[['artor',300,'g']]},
+      {t:'1 msk rapsolja (till löken och potatisen)', b:[['olja',1,'msk']]},
+      {t:'Salt, svartpeppar, paprikapulver, vitlökspulver och timjan', b:[['salt'],['peppar'],['paprikapulver'],['vitlokspulver'],['timjan']]},
+      {t:'2 msk mörk oxfond eller kalvfond (kolla att den är laktosfri)', b:[['fond',2,'msk']]},
+      {t:'En skvätt mörk soya', b:[['soya']]}
+    ],
+    steps:[
+      {h:'Potatis & morötter', t:'Sätt ugnen på 200 °C (eller använd airfryer). Skär potatis och morötter i små tärningar eller klyftor. Blanda med 1 tsk olja, salt, peppar och paprikapulver. Rosta i 20–25 minuter tills de är mjuka och krispiga.'},
+      {h:'Karamelliserad lök', t:'Skiva löken tunt. Värm 1 tsk olja i en panna på medellåg värme och stek löken långsamt i 15–20 minuter tills den är helt mjuk och gyllenbrun. Ta ur löken och lägg den åt sidan.'},
+      {h:'Köttfärs', t:'Höj värmen, lägg i nötfärsen och bryt ner den. Krydda med salt, peppar, vitlökspulver, timjan, soya och fond. Stek tills färsen är helt genomstekt.'},
+      {h:'Blanda ihop', t:'Rör ner den karamelliserade löken och de frysta ärtorna i färsen och låt allt bli varmt.'},
+      {t:'Fördela rostad potatis och morötter och köttfärsblandningen i 5 matlådor.'}
+    ]
+  },
+  curry:{
+    tag:'Curry', short:'Kycklingcurry', meal:'Lunch', no:3, kcal:750, prot:67,
+    title:'Krämig kycklingcurry med ris & broccoli',
+    ing:[
+      {t:'1,2 kg kycklingbröstfilé', b:[['kycklingfile',1200,'g']]},
+      {t:'5 dl laktosfri matlagningsgrädde (eller Milda Mat 4 % laktosfri)', b:[['matgradde',5,'dl']]},
+      {t:'350 g okokt basmatiris', b:[['ris',350,'g']]},
+      {t:'2 gula lökar', b:[['gullok',2,'st']]},
+      {t:'500 g fryst eller färsk broccoli', b:[['broccoli',500,'g']]},
+      {t:'Gul curry, salt och svartpeppar', b:[['curry'],['salt'],['peppar']]},
+      {t:'2 tsk majsstärkelse, upplöst i lite kallt vatten (för redning)', b:[['majs',2,'tsk']]},
+      {t:'Lite olja till stekning', b:[['olja']]}
+    ],
+    steps:[
+      {t:'Koka riset. Koka eller ånga broccolin lätt vid sidan av.'},
+      {t:'Hacka löken och skär kycklingen i bitar.'},
+      {t:'Fräs löken i lite olja tills den mjuknar. Tillsätt kycklingen och krydda rikligt med gul curry, salt och peppar. Stek tills kycklingen har fått fin färg.'},
+      {t:'Häll i den laktosfria matlagningsgrädden. Låt puttra i 5 minuter.'},
+      {t:'Rör ut majsstärkelsen i 2 msk kallt vatten och rör ner i såsen så att den blir krämig och tjock. Låt koka upp i 1 minut.'},
+      {t:'Fördela ris, broccoli och kycklingcurryn i 5 matlådor.'}
+    ]
+  },
+  biffar:{
+    tag:'Biffar', short:'Kycklingbiffar', meal:'Kväll', no:6, kcal:675, prot:62,
+    title:'Greek-style kycklingfärsbiffar med tzatziki, potatisklyftor & ärtor',
+    ing:[
+      {t:'1,2 kg kycklingfärs', b:[['kycklingfars',1200,'g']]},
+      {t:'150 g laktosfri fetaost, smulad', b:[['fetaost',150,'g']]},
+      {t:'1 tsk vitlökspulver', b:[['vitlokspulver',1,'tsk']]},
+      {t:'1 msk torkad oregano', b:[['oregano',1,'msk']]},
+      {t:'Salt, svartpeppar och paprikapulver', b:[['salt'],['peppar'],['paprikapulver']]},
+      {t:'800 g potatis, skuren i klyftor', b:[['potatis',800,'g']]},
+      {t:'500 g frysta gröna ärtor', b:[['artor',500,'g']]},
+      {t:'Lite olja och salt till potatisen', b:[['olja']]},
+      {g:'Laktosfri tzatziki'},
+      {t:'2,5 dl laktosfri grekisk yoghurt (eller laktosfri kvarg 0 %)', b:[['grekisk',2.5,'dl']]},
+      {t:'½ gurka, riven (pressa ur vätskan)', b:[['gurka',0.5,'st']]},
+      {t:'1 vitlöksklyfta, riven', b:[['vitlok',1,'klyfta']]},
+      {t:'Salt och peppar', b:[['salt'],['peppar']]}
+    ],
+    steps:[
+      {t:'Blanda kycklingfärs, smulad fetaost och kryddor i en skål. Forma till 10–15 små biffar.'},
+      {t:'Rosta potatisklyftorna i ugnen eller airfryern med lite olja och salt i 20–25 minuter.'},
+      {t:'Stek biffarna i en panna på medelvärme i ca 4–5 minuter per sida tills de är helt genomstekta.'},
+      {t:'Koka upp ärtorna snabbt. Blanda ihop tzatzikin i en skål.'},
+      {t:'Fördela biffar, potatis och ärtor i matlådorna.'}
+    ],
+    tip:'Lägg tzatzikin i små separata burkar om du ska värma matlådan i mikron på kvällen.'
+  },
+  chili:{
+    tag:'Chili', short:'Chili con carne', meal:'Lunch', no:5, kcal:740, prot:52,
+    title:'Chili con carne på nötfärs med ris & krispig paprika',
+    ing:[
+      {t:'1 kg nötfärs (10 % fett)', b:[['notfars',1000,'g']]},
+      {t:'2 burkar krossade tomater (totalt 800 g)', b:[['tomater',2,'burk']]},
+      {t:'1 burk svarta bönor eller kidneybönor, sköljda (ca 250 g avrunnen vikt)', b:[['bonor',1,'burk']]},
+      {t:'2 röda paprikor, tärnade', b:[['paprika',2,'st']]},
+      {t:'1 gul lök', b:[['gullok',1,'st']]},
+      {t:'2 klyftor vitlök', b:[['vitlok',2,'klyfta']]},
+      {t:'350 g okokt basmatiris', b:[['ris',350,'g']]},
+      {t:'Chilipulver, spiskummin, oregano, paprikapulver, salt och peppar', b:[['chilipulver'],['spiskummin'],['oregano'],['paprikapulver'],['salt'],['peppar']]},
+      {t:'Lite olja till stekning', b:[['olja']]}
+    ],
+    steps:[
+      {t:'Koka riset.'},
+      {t:'Hacka lök, vitlök och paprika. Fräs löken och vitlöken i en stor kastrull.'},
+      {t:'Lägg i nötfärsen och bryt ner den. Krydda rikligt med spiskummin, chili, oregano och salt.'},
+      {t:'Häll i krossade tomater, tärnad paprika och sköljda bönor. Låt sjuda under lock i 15–20 minuter så att smakerna utvecklas och grytan tjocknar.'},
+      {t:'Fördela ris och chili con carne i 5 matlådor.'}
+    ]
+  },
+  teriyaki:{
+    tag:'Teriyaki', short:'Biff teriyaki', meal:'Kväll', no:4, kcal:530, prot:59,
+    title:'Marinerad lövbiff teriyaki med stekta äggnudlar & wokgrönsaker',
+    ing:[
+      {t:'1 kg lövbiff eller tunnskuren nötytterfilé, skuren i strimlor', b:[['lovbiff',1000,'g']]},
+      {t:'250 g äggnudlar (okokt vikt)', b:[['nudlar',250,'g']]},
+      {t:'800 g wokgrönsaker (eller finstrimlad kål, morötter och broccoli)', b:[['wok',800,'g','eller finstrimlad kål, morötter och broccoli']]},
+      {t:'Lite olja till stekning', b:[['olja']]},
+      {g:'Teriyakisås'},
+      {t:'1 dl mörk soya', b:[['soya',1,'dl']]},
+      {t:'2 msk ostronsås', b:[['ostronsas',2,'msk']]},
+      {t:'1 tsk riven färsk ingefära', b:[['ingefara']]},
+      {t:'1 pressad vitlöksklyfta', b:[['vitlok',1,'klyfta']]},
+      {t:'1–2 msk sötningsmedel eller honung', b:[['sotning',[1,2],'msk']]},
+      {t:'1 tsk majsstärkelse, utrörd i lite vatten', b:[['majs',1,'tsk']]}
+    ],
+    steps:[
+      {t:'Koka nudlarna enligt förpackningen (ofta bara 3–4 minuter) och spola dem i kallt vatten.'},
+      {t:'Vispa ihop såsingredienserna i en kopp.'},
+      {t:'Stek köttstrimlorna på hög värme i en wok eller stor panna i 2–3 minuter så att de får yta. Ta ur köttet.'},
+      {t:'Stek wokgrönsakerna krispiga i samma panna.'},
+      {t:'Blanda ner kött, kokta nudlar och såsen i pannan. Rör runt i 1–2 minuter tills såsen tjocknar och täcker allt.'},
+      {t:'Fördela i 5 matlådor.'}
+    ]
+  }
+};
+
+const COMBOS = {A:{dishes:['wok','farsgryta']}, B:{dishes:['curry','teriyaki']}, C:{dishes:['chili','biffar']}};
+const ORDER = ['A','B','C'];
+
+const SWEETS = {
+  kvarg:{
+    tag:'Chokladkvarg', title:'Choklad- & jordnötskvarg', sub:'Mest mättande och proteintät', chips:['Under 3 min'], kcal:260, prot:27,
+    ing:[
+      {t:'200 g laktosfri kvarg (eller laktosfri grekisk yoghurt 0 %)', b:[['kvarg',200,'g']]},
+      {t:'1 msk osötat kakao', b:[['kakao',1,'msk']]},
+      {t:'1 msk jordnötssmör (eller jordnötspulver/PB2, då blir skålen ca 200 kcal)', b:[['jordnot',1,'msk']]},
+      {t:'Sötningsmedel efter smak', b:[['sotning']]},
+      {t:'50 g frysta hallon eller jordgubbar, upptinade', b:[['bar',50,'g']]}
+    ],
+    steps:['Rör ihop kvarg, kakao, jordnötssmör och sötningsmedel.','Toppa med de upptinade bären.'],
+    why:'Kakaon och jordnötssmöret ger en rik smak av choklad och bakelse. Skålen har runt 27 g protein som håller dig mätt resten av kvällen.'
+  },
+  bar:{
+    tag:'Varma bär', title:'Varma bär med vaniljkvarg', sub:'Känns som smuldeg eller paj', chips:['Under 3 min'], kcal:210, prot:18,
+    ing:[
+      {t:'150 g frysta blåbär eller hallon', b:[['bar',150,'g']]},
+      {t:'150 g laktosfri vaniljkvarg utan tillsatt socker', b:[['vaniljkvarg',150,'g']]},
+      {t:'1 msk chiafrön eller hackade mandlar', b:[['chia',1,'msk','eller hackade mandlar till varma bär']]}
+    ],
+    steps:['Värm bären i mikron i 1 minut så att de blir varma och saftiga.','Klicka vaniljkvargen över bären.','Strö över chiafrön eller mandlar för lite krisp.']
+  }
+};
+// Tea: one cup per evening with a splash of lactose-free milk (~0.5 dl)
+const TEA = {tag:'Te', kcal:20, prot:2, b:[['mjolk'],['sotning']]};
+// Breakfast: 3 boiled eggs + chia pudding (2 tbsp chia seeds, 2 dl high-protein chocolate soy drink)
+const BREAKFAST = {tag:'Frukost', kcal:450, prot:34, b:[['agg',3,'st'],['chia',2,'msk'],['sojadryck',2,'dl']]};
+// Estimated maintenance kcal per day (Mifflin-St Jeor with an activity factor)
+const MAINTENANCE = 3000;
+
+const TABS = ['handla','recept','sotsug','veckan'];
+const CHECK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+const CHEVRON = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>';
+const CROSS = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+// Escape user-typed text before it goes into innerHTML
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
+
+/* ---------- State (sparas bara i den här webbläsaren) ---------- */
+
+const KEY = 'preppdag.v1';
+const DEFAULTS = {combo:'A', tab:'handla', checked:{A:[],B:[],C:[]}, sweets:{kvarg:3, bar:2, te:true}, breakfast:7, extrasOpen:false, custom:[], addOpen:false, addSec:'ovrigt', dish:{A:0,B:0,C:0}, steps:{}};
+
+function load(){
+  const d = JSON.parse(JSON.stringify(DEFAULTS));
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e) {}
+  if (s && typeof s === 'object') {
+    for (const k of Object.keys(d)) {
+      if (s[k] === undefined) continue;
+      d[k] = (d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) ? Object.assign(d[k], s[k]) : s[k];
+    }
+  }
+  if (!ORDER.includes(d.combo)) d.combo = 'A';
+  if (!TABS.includes(d.tab)) d.tab = 'handla';
+  if (!Number.isInteger(d.breakfast) || d.breakfast < 0 || d.breakfast > 7) d.breakfast = 7;
+  const secOk = s => SECTIONS.some(x => x.id === s);
+  d.custom = (Array.isArray(d.custom) ? d.custom : [])
+    .filter(i => i && typeof i.id === 'string' && typeof i.n === 'string' && i.n.trim())
+    .map(i => ({id:i.id, n:i.n.slice(0, 60), q:typeof i.q === 'string' ? i.q.slice(0, 20) : '', s:secOk(i.s) ? i.s : 'ovrigt', w:!!i.w, done:!!i.done}));
+  if (!secOk(d.addSec)) d.addSec = 'ovrigt';
+  return d;
+}
+let S = load();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+
+const h = location.hash.slice(1);
+if (TABS.includes(h)) S.tab = h;
+
+const $ = sel => document.querySelector(sel);
+const next = c => ORDER[(ORDER.indexOf(c)+1) % ORDER.length];
+const names = c => COMBOS[c].dishes.map(id => DISHES[id].short);
+const nf = new Intl.NumberFormat('sv-SE');
+const roundTo = (n, step) => Math.round(n / step) * step;
+function dayLabel(t){
+  const parts = [t.nb ? 'frukost' : '', t.bowls ? 'sötsug' : ''].filter(Boolean);
+  return parts.length ? 'Hela dagen med ' + parts.join(' och ') : 'Hela dagen';
+}
+
+// Average day for a combo: lunch + dinner, with breakfasts and evening snacks spread over 7 days
+function dayTotals(c){
+  const sw = S.sweets, kv = sw.kvarg || 0, br = sw.bar || 0, nb = S.breakfast || 0;
+  const dishes = COMBOS[c].dishes.map(id => DISHES[id]);
+  const mealsK = dishes.reduce((s, d) => s + d.kcal, 0), mealsP = dishes.reduce((s, d) => s + d.prot, 0);
+  const sweetK = (kv * SWEETS.kvarg.kcal + br * SWEETS.bar.kcal) / 7 + (sw.te ? TEA.kcal : 0);
+  const sweetP = (kv * SWEETS.kvarg.prot + br * SWEETS.bar.prot) / 7 + (sw.te ? TEA.prot : 0);
+  const bkK = BREAKFAST.kcal * nb / 7, bkP = BREAKFAST.prot * nb / 7;
+  return {dishes, nb, bowls: kv + br, bkK, sweetK, kcal: bkK + mealsK + sweetK, prot: bkP + mealsP + sweetP};
+}
+
+/* ---------- Mängder ---------- */
+
+function n2s(n, half){
+  const r = Math.round(n*100)/100;
+  if (half) { const w = Math.floor(r); if (Math.abs(r - w - 0.5) < 1e-6) return (w ? w : '') + '½'; }
+  return String(r).replace('.', ',');
+}
+function rng(lo, hi, half){ return lo === hi ? n2s(lo, half) : n2s(lo, half) + '–' + n2s(hi, half); }
+function fmtPart(u, p){
+  const lo = p[0], hi = p[1];
+  if (u === 'g' && lo >= 1000) return rng(lo/1000, hi/1000) + ' kg';
+  if (u === 'dl' && lo >= 10) return rng(lo/10, hi/10) + ' l';
+  if (u === 'klyfta') return rng(lo, hi) + (hi > 1 ? ' klyftor' : ' klyfta');
+  if (u === 'burk') return rng(lo, hi) + (hi > 1 ? ' burkar' : ' burk');
+  return rng(lo, hi, u === 'st') + ' ' + u;
+}
+function amount(e){
+  if (e.custom) return e.custom.q;
+  const parts = e.units.map(u => fmtPart(u, e.parts[u]));
+  if (!parts.length) return e.def.qt || '';
+  return parts.join(' + ') + (e.hasNull ? ' + ' + (e.def.more || 'lite') : '');
+}
+
+function buildList(c){
+  const map = new Map();
+  function add(b, tag, mult){
+    const k = b[0], q = b[1], u = b[2], alt = b[3];
+    const def = ITEMS[k]; if (!def) return;
+    let e = map.get(k);
+    if (!e) { e = {k, def, parts:{}, units:[], hasNull:false, tags:[], alts:def.alt ? [def.alt] : []}; map.set(k, e); }
+    if (q == null) e.hasNull = true;
+    else {
+      const lo = Array.isArray(q) ? q[0] : q, hi = Array.isArray(q) ? q[1] : q;
+      if (!e.parts[u]) { e.parts[u] = [0,0]; e.units.push(u); }
+      e.parts[u][0] += lo*mult; e.parts[u][1] += hi*mult;
+    }
+    if (!e.tags.includes(tag)) e.tags.push(tag);
+    if (alt && !e.alts.includes(alt)) e.alts.push(alt);
+  }
+  COMBOS[c].dishes.forEach(id => { const d = DISHES[id]; d.ing.forEach(r => (r.b || []).forEach(b => add(b, d.tag, 1))); });
+  if (S.breakfast > 0) BREAKFAST.b.forEach(b => add(b, BREAKFAST.tag, S.breakfast));
+  ['kvarg','bar'].forEach(id => {
+    const n = S.sweets[id] || 0;
+    if (n > 0) SWEETS[id].ing.forEach(r => (r.b || []).forEach(b => add(b, SWEETS[id].tag, n)));
+  });
+  if (S.sweets.te) TEA.b.forEach(b => add(b, TEA.tag, 1));
+  const all = [...map.values()].sort((x, y) => ITEM_ORDER.indexOf(x.k) - ITEM_ORDER.indexOf(y.k));
+  // User-added items go last in the section they picked
+  const own = S.custom.map(i => ({k:'u:' + i.id, def:{n:i.n, s:i.s}, custom:i, alts:[], tags:['Egen vara'].concat(i.w ? ['Varje vecka'] : [])}));
+  return SECTIONS.map(sec => ({sec, items:all.filter(e => e.def.s === sec.id).concat(own.filter(e => e.def.s === sec.id))})).filter(g => g.items.length);
+}
+
+/* ---------- Topp och lock ---------- */
+
+function renderWhen(){
+  const el = $('#when'), now = new Date(), d = now.getDay();
+  if (d === 6) { el.textContent = 'Lördag · preppdag idag'; el.classList.add('today'); return; }
+  el.classList.remove('today');
+  const days = (6 - d + 7) % 7;
+  const nx = new Date(now.getFullYear(), now.getMonth(), now.getDate() + days);
+  const f = new Intl.DateTimeFormat('sv-SE', {day:'numeric', month:'short'}).format(nx).replace('.', '');
+  el.textContent = 'Preppdag lör ' + f + ' · om ' + days + (days === 1 ? ' dag' : ' dagar');
+}
+
+function renderLids(){
+  $('#lids').innerHTML = ORDER.map(c => {
+    const n = names(c);
+    return `<button class="lid" type="button" data-act="combo" data-c="${c}" aria-pressed="${S.combo === c}" aria-label="Combo ${c}: ${n[0]} och ${n[1]}" style="--lid:var(--${c.toLowerCase()})">
+      <span class="letter">${c}</span><span class="dishes">${n[0]}<br>${n[1]}</span></button>`;
+  }).join('');
+}
+
+/* ---------- Handla ---------- */
+
+function itemRow(e, c, chk){
+  if (e.custom) {
+    const i = e.custom, id = 'own-' + i.id, nm = esc(i.n);
+    return `<div class="item-wrap">
+            <label class="item" for="${id}">
+              <input type="checkbox" id="${id}" data-u="${esc(i.id)}"${i.done ? ' checked' : ''}>
+              <span class="box" aria-hidden="true">${CHECK}</span>
+              <span class="txt"><span class="name">${nm}</span><span class="tags">${e.tags.join(' · ')}</span></span>
+              <span class="amt">${esc(i.q)}</span>
+            </label>
+            <button class="del" type="button" data-act="own-del" data-u="${esc(i.id)}" aria-label="Ta bort ${nm}">${CROSS}</button>
+          </div>`;
+  }
+  const a = amount(e), id = 'chk-' + c + '-' + e.k;
+  return `<label class="item" for="${id}">
+            <input type="checkbox" id="${id}" data-k="${e.k}"${chk.has(e.k) ? ' checked' : ''}>
+            <span class="box" aria-hidden="true">${CHECK}</span>
+            <span class="txt"><span class="name">${e.def.n}</span>${e.alts.length ? `<span class="alt">${e.alts.join(' · ')}</span>` : ''}<span class="tags">${e.tags.join(' · ')}</span></span>
+            <span class="amt">${a}</span>
+          </label>`;
+}
+
+function renderHandla(){
+  const c = S.combo, groups = buildList(c), chk = new Set(S.checked[c] || []);
+  const n = names(c), sw = S.sweets;
+  const sumParts = [];
+  if (S.breakfast) sumParts.push(S.breakfast === 1 ? '1 frukost' : S.breakfast + ' frukostar');
+  if (sw.kvarg) sumParts.push(sw.kvarg + ' chokladkvarg');
+  if (sw.bar) sumParts.push(sw.bar + ' varma bär');
+  if (sw.te) sumParts.push('te');
+  const sum = sumParts.length ? sumParts.join(', ') : 'inget tillagt';
+
+  $('#view-handla').innerHTML = `
+    <div class="intro">
+      <div class="eyebrow">Inköpslista · Combo ${c}</div>
+      <h1 class="h1" id="left-title"></h1>
+      <p class="sub">Lunch: ${n[0]} · Kväll: ${n[1]} · 10 lådor</p>
+    </div>
+    <div class="progress" id="progress" role="progressbar" aria-label="Avbockat"><span></span></div>
+
+    <details class="extras" id="extras"${S.extrasOpen ? ' open' : ''}>
+      <summary><span><span class="name">Frukost, sötsug & te</span><span class="alt">I listan: ${sum}</span></span>${CHEVRON}</summary>
+      <div class="extras-body">
+        <div class="srow">
+          <div><div class="name">Frukost</div><div class="alt">dagar per vecka · 3 ägg och chiapudding</div></div>
+          <div class="stepper">
+            <button type="button" data-act="breakfast" data-d="-1" aria-label="En frukost färre"${S.breakfast <= 0 ? ' disabled' : ''}>−</button>
+            <output aria-live="polite">${S.breakfast}</output>
+            <button type="button" data-act="breakfast" data-d="1" aria-label="En frukost till"${S.breakfast >= 7 ? ' disabled' : ''}>+</button>
+          </div>
+        </div>
+        ${['kvarg','bar'].map(k => `
+          <div class="srow">
+            <div><div class="name">${SWEETS[k].title}</div><div class="alt">kvällar per vecka</div></div>
+            <div class="stepper">
+              <button type="button" data-act="sweet" data-k="${k}" data-d="-1" aria-label="En kväll färre"${sw[k] <= 0 ? ' disabled' : ''}>−</button>
+              <output aria-live="polite">${sw[k]}</output>
+              <button type="button" data-act="sweet" data-k="${k}" data-d="1" aria-label="En kväll till"${sw[k] >= 7 ? ' disabled' : ''}>+</button>
+            </div>
+          </div>`).join('')}
+        <label class="srow switch-row" for="te-toggle">
+          <div><div class="name">Te-rutinen</div><div class="alt">Laktosfri mjölk och sötningsmedel</div></div>
+          <input type="checkbox" id="te-toggle"${sw.te ? ' checked' : ''}><span class="track" aria-hidden="true"></span>
+        </label>
+      </div>
+    </details>
+
+    <details class="extras" id="addbox"${S.addOpen ? ' open' : ''}>
+      <summary><span><span class="name">Lägg till egen vara</span><span class="alt">${S.custom.length ? S.custom.length + (S.custom.length === 1 ? ' egen vara' : ' egna varor') + ' i listan' : 'Till exempel tvål eller tandkräm'}</span></span>${CHEVRON}</summary>
+      <form class="add-form" id="add-form" autocomplete="off">
+        <div><label class="fl" for="add-name">Vara</label><input class="field" id="add-name" maxlength="60" placeholder="t.ex. Tvål" enterkeyhint="done"></div>
+        <div class="add-row">
+          <div><label class="fl" for="add-qty">Mängd</label><input class="field" id="add-qty" maxlength="20" placeholder="Valfritt"></div>
+          <div><label class="fl" for="add-sec">Avdelning</label><select class="field" id="add-sec">${SECTIONS.map(s => `<option value="${s.id}"${s.id === S.addSec ? ' selected' : ''}>${s.name}</option>`).join('')}</select></div>
+        </div>
+        <label class="switch-row add-weekly" for="add-weekly"><span><span class="name">Varje vecka</span><span class="alt">Annars försvinner varan vid ny vecka om du har bockat av den</span></span><input type="checkbox" id="add-weekly"><span class="track" aria-hidden="true"></span></label>
+        <button class="btn primary" type="submit">Lägg till i listan</button>
+      </form>
+    </details>
+
+    ${groups.map(g => `
+      <section class="group" data-sec="${g.sec.id}">
+        <div class="group-h"><h2 class="h3">${g.sec.name}</h2><span class="meta" data-count></span></div>
+        ${g.sec.note ? `<p class="group-note">${g.sec.note}</p>` : ''}
+        ${g.items.map(e => itemRow(e, c, chk)).join('')}
+      </section>`).join('')}
+
+    <div class="actions">
+      <button class="btn primary" type="button" data-act="copy">Kopiera det som är kvar</button>
+      <button class="btn" type="button" data-act="reset" id="reset-btn">Avbocka allt</button>
+    </div>
+    <div class="copybox" id="copybox" hidden>
+      <p class="hint">Markera texten och kopiera den till Anteckningar eller Påminnelser.</p>
+      <textarea id="copytext" rows="9" readonly></textarea>
+    </div>
+  `;
+  $('#extras').addEventListener('toggle', ev => { S.extrasOpen = ev.target.open; save(); });
+  $('#addbox').addEventListener('toggle', ev => { S.addOpen = ev.target.open; save(); });
+  updateCounts();
+}
+
+function updateCounts(){
+  const v = $('#view-handla');
+  const boxes = [...v.querySelectorAll('.item input')];
+  const done = boxes.filter(b => b.checked).length, total = boxes.length, left = total - done;
+  $('#left-title').textContent = left ? (left === 1 ? '1 vara kvar' : left + ' varor kvar') : 'Allt är i korgen';
+  const p = $('#progress');
+  p.setAttribute('aria-valuemin', '0'); p.setAttribute('aria-valuemax', String(total)); p.setAttribute('aria-valuenow', String(done));
+  p.firstElementChild.style.width = (total ? done/total*100 : 0) + '%';
+  v.querySelectorAll('.group').forEach(g => {
+    const b = [...g.querySelectorAll('.item input')];
+    g.querySelector('[data-count]').textContent = b.filter(x => x.checked).length + '/' + b.length;
+  });
+}
+
+function listText(){
+  const c = S.combo, groups = buildList(c), chk = new Set(S.checked[c] || []);
+  let rest = groups.map(g => ({sec:g.sec, items:g.items.filter(e => e.custom ? !e.custom.done : !chk.has(e.k))})).filter(g => g.items.length);
+  if (!rest.length) rest = groups;
+  const n = names(c);
+  const lines = ['Combo ' + c + ': ' + n[0] + ' + ' + n[1]];
+  rest.forEach(g => {
+    lines.push('', g.sec.name.toUpperCase());
+    g.items.forEach(e => { const a = amount(e); lines.push('- ' + e.def.n + (a ? ' – ' + a : '')); });
+  });
+  return lines.join('\n');
+}
+
+function copyList(){
+  const text = listText();
+  const fallback = () => {
+    const box = $('#copybox'), ta = $('#copytext');
+    ta.value = text; box.hidden = false;
+    ta.focus(); ta.select(); try { ta.setSelectionRange(0, text.length); } catch(e) {}
+    toast('Markera och kopiera texten under knapparna');
+  };
+  try {
+    navigator.clipboard.writeText(text).then(() => toast('Kopierad. Klistra in i Anteckningar eller Påminnelser.'), fallback);
+  } catch(e) { fallback(); }
+}
+
+let armTimer = null;
+function resetChecks(btn){
+  if (!btn.classList.contains('armed')) {
+    btn.classList.add('armed'); btn.textContent = 'Tryck igen för att avbocka';
+    clearTimeout(armTimer);
+    armTimer = setTimeout(() => { btn.classList.remove('armed'); btn.textContent = 'Avbocka allt'; }, 3000);
+    return;
+  }
+  clearTimeout(armTimer);
+  S.checked[S.combo] = []; S.custom.forEach(i => { i.done = false; }); save(); renderHandla();
+  toast('Listan är avbockad');
+}
+
+/* ---------- Recept ---------- */
+
+const AMT = /^((?:ca\s)?[\d½][\d,½–]*(?:\s(?:kg|g|ml|dl|msk|tsk|burkar|burk|klyftor|klyfta))?)\s+(.+)$/;
+function ingList(rows){
+  return '<ul class="ing">' + rows.map(r => {
+    if (r.g) return `<li class="ing-g">${r.g}</li>`;
+    const m = r.t.match(AMT);
+    return m ? `<li><span class="ia">${m[1]}</span><span>${m[2]}</span></li>` : `<li><span class="ia"></span><span>${r.t}</span></li>`;
+  }).join('') + '</ul>';
+}
+
+function recipeCard(id){
+  const d = DISHES[id], done = new Set(S.steps[id] || []);
+  return `<article class="card">
+    <header class="card-h">
+      <div class="eyebrow">Rätt ${d.no} · ${d.meal}</div>
+      <h2 class="h2">${d.title}</h2>
+      <div class="chips"><span class="chip">~${d.kcal} kcal</span><span class="chip">~${d.prot} g protein</span><span class="chip">5 portioner</span><span class="chip">Laktosfri</span></div>
+    </header>
+    <section class="block"><h3 class="h3">Ingredienser</h3>${ingList(d.ing)}</section>
+    <section class="block">
+      <div class="block-h"><h3 class="h3">Gör så här</h3><span class="meta">${done.size}/${d.steps.length} klara${done.size ? ` · <button class="link" type="button" data-act="steps-reset" data-d="${id}">Nollställ</button>` : ''}</span></div>
+      <ol class="steps">${d.steps.map((s, i) => {
+        const on = done.has(i);
+        return `<li><button class="step${on ? ' is-done' : ''}" type="button" data-act="step" data-d="${id}" data-i="${i}" aria-pressed="${on}">
+          <span class="num">${on ? CHECK : i + 1}</span><span class="stxt">${s.h ? `<b>${s.h}:</b> ` : ''}${s.t}</span></button></li>`;
+      }).join('')}</ol>
+      <p class="hint">Tryck på ett steg när det är klart.</p>
+    </section>
+    ${d.tip ? `<p class="tip"><b>Tips:</b> ${d.tip}</p>` : ''}
+  </article>`;
+}
+
+let wakeLock = null, wantWake = false;
+const canWake = 'wakeLock' in navigator;
+async function setWake(on){
+  wantWake = on;
+  if (on) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+      toast('Skärmen hålls tänd medan sidan är öppen');
+    } catch(e) { wantWake = false; wakeLock = null; toast('Skärmen kan inte hållas tänd här'); }
+  } else {
+    try { if (wakeLock) await wakeLock.release(); } catch(e) {}
+    wakeLock = null;
+  }
+  renderRecept();
+}
+document.addEventListener('visibilitychange', () => {
+  if (wantWake && !wakeLock && document.visibilityState === 'visible') {
+    navigator.wakeLock.request('screen').then(l => { wakeLock = l; l.addEventListener('release', () => { wakeLock = null; }); }).catch(() => {});
+  }
+});
+
+function renderRecept(){
+  const c = S.combo, ids = COMBOS[c].dishes, idx = S.dish[c] === 1 ? 1 : 0;
+  const kcal = ids.reduce((s, id) => s + DISHES[id].kcal, 0), prot = ids.reduce((s, id) => s + DISHES[id].prot, 0);
+  const t = dayTotals(c);
+  $('#view-recept').innerHTML = `
+    <div class="rhead">
+      <div class="intro"><div class="eyebrow">Recept · Combo ${c}</div><p class="sub">Per dag, lunch + kväll: ~${nf.format(kcal)} kcal · ~${prot} g protein</p><p class="sub">${dayLabel(t)}: ~${nf.format(roundTo(t.kcal, 10))} kcal · ~${roundTo(t.prot, 5)} g protein</p></div>
+      ${canWake ? `<button class="pill" type="button" data-act="wake" aria-pressed="${wantWake}"><i aria-hidden="true"></i>${wantWake ? 'Skärmen tänd' : 'Håll skärmen tänd'}</button>` : ''}
+    </div>
+    <div class="seg" role="tablist" aria-label="Välj rätt">
+      ${ids.map((id, i) => `<button type="button" role="tab" data-act="dish" data-i="${i}" aria-selected="${i === idx}">
+        <span class="seg-k">Rätt ${DISHES[id].no} · ${DISHES[id].meal}</span><span class="seg-n">${DISHES[id].short}</span></button>`).join('')}
+    </div>
+    ${recipeCard(ids[idx])}
+  `;
+}
+
+/* ---------- Sötsug ---------- */
+
+function sweetCard(k){
+  const d = SWEETS[k], n = S.sweets[k] || 0;
+  return `<article class="card">
+    <header class="card-h">
+      <div class="eyebrow">${d.sub}</div>
+      <h2 class="h2">${d.title}</h2>
+      <div class="chips">${d.chips.map(x => `<span class="chip">${x}</span>`).join('')}<span class="chip">~${d.kcal} kcal</span><span class="chip">~${d.prot} g protein</span><span class="chip">${n ? n + ' kvällar i listan' : 'Inte i listan'}</span></div>
+    </header>
+    <section class="block"><h3 class="h3">Ingredienser · 1 skål</h3>${ingList(d.ing)}</section>
+    <section class="block"><h3 class="h3">Gör så här</h3>
+      <ol class="steps">${d.steps.map((s, i) => `<li><div class="step" style="cursor:default"><span class="num">${i + 1}</span><span class="stxt">${s}</span></div></li>`).join('')}</ol>
+    </section>
+    ${d.why ? `<p class="why"><b>Därför funkar det.</b> ${d.why}</p>` : ''}
+  </article>`;
+}
+
+function renderSotsug(){
+  $('#view-sotsug').innerHTML = `
+    <div class="intro">
+      <div class="eyebrow">Kl 20–21</div>
+      <h1 class="h1">När kvällssuget kommer</h1>
+      <p class="lead">När du slutade snusa försvann kroppens jämna nikotindoser, och hjärnan letar efter snabb energi som socker och bakelser. Socker eller honung i teet ger en snabb blodsockertopp som sedan dalar och skapar ännu mer sug.</p>
+    </div>
+    <article class="card">
+      <header class="card-h"><div class="eyebrow">Te-rutinen</div><h2 class="h2">Sött te utan blodsockerfall</h2></header>
+      <dl class="swaps">
+        <div class="swap"><dt><s>Honung eller socker</s><span>→</span>Kalorifritt sötningsmedel</dt>
+          <dd>Flytande stevia, sukralos eller erytritol (t.ex. ICA Sötströ). Honung ger nästan samma blodsockerpåslag som vanligt socker.</dd></div>
+        <div class="swap"><dt><s>Vanlig mjölk</s><span>→</span>Laktosfri lättmjölk</dt>
+          <dd>Eller osötad mandel- eller sojadryck.</dd></div>
+      </dl>
+    </article>
+    ${sweetCard('kvarg')}
+    ${sweetCard('bar')}
+    <button class="btn" type="button" data-act="goto-extras">Ändra antal kvällar i inköpslistan</button>
+  `;
+}
+
+/* ---------- Veckan ---------- */
+
+function renderVeckan(){
+  const c = S.combo, nx = next(c), nn = names(nx), t = dayTotals(c);
+  const diff = MAINTENANCE - t.kcal;
+  const diffTxt = Math.abs(diff) < 100 ? 'så du ligger nära den nivån' : `så du ligger ca ${nf.format(roundTo(Math.abs(diff), 50))} kcal ${diff > 0 ? 'under' : 'över'}`;
+  const sweetSub = t.bowls ? `snitt per dag, ${t.bowls} ${t.bowls === 1 ? 'skål' : 'skålar'} i veckan` : (S.sweets.te ? 'bara te' : 'inget valt');
+  const bkSub = t.nb === 7 ? 'Ägg och chiapudding' : (t.nb ? `snitt per dag, ${t.nb} ${t.nb === 1 ? 'dag' : 'dagar'} i veckan` : 'inget valt');
+  $('#view-veckan').innerHTML = `
+    <div class="intro">
+      <div class="eyebrow">Veckan</div>
+      <h1 class="h1">10 lådor på en lördag</h1>
+      <p class="lead">Fem luncher och fem kvällsmål. Alla recept är laktosfria, proteinrika och fulla av grönsaker.</p>
+    </div>
+    <article class="card">
+      <h2 class="h3">Rytmen</h2>
+      <div class="timeline">
+        <div class="tl"><div class="tl-when">Lördag</div><div><div class="tl-t">Preppdag</div><p>Välj en kombo och laga båda rätterna samtidigt. Då fyller du alla 10 lådor.</p></div></div>
+        <div class="tl"><div class="tl-when">Morgon</div><div><div class="tl-t">Frukost</div><p>Ät tre kokta ägg och en chiapudding på 2 msk chiafrön och 2 dl sojadryck med chokladsmak och extra protein. Frukosten ger ca ${BREAKFAST.kcal} kcal och ${BREAKFAST.prot} g protein.</p></div></div>
+        <div class="tl"><div class="tl-when">Efter jobbet</div><div><div class="tl-t">Ät kvällsrätten direkt</div><p>Ta rätt 2, 4 eller 6 när du kommer hem i stället för mackor. Det ger ordentlig näring och stabiliserar hjärnan efter arbetsdagen.</p></div></div>
+        <div class="tl"><div class="tl-when">Kl 20–21</div><div><div class="tl-t">När suget kommer</div><p>Te med laktosfri mjölk och sötningsmedel, plus en skål chokladkvarg eller varma bär. <button class="link" type="button" data-act="tab" data-tab="sotsug" style="font-size:15px">Visa recepten</button></p></div></div>
+      </div>
+    </article>
+    <article class="card">
+      <div class="block-h"><h2 class="h3">En vanlig dag</h2><span class="meta">Combo ${c}</span></div>
+      <dl class="day">
+        <div class="day-r"><dt>Frukost<span>${bkSub}</span></dt><dd>~${nf.format(roundTo(t.bkK, 10))} kcal</dd></div>
+        ${t.dishes.map(d => `<div class="day-r"><dt>${d.meal}<span>${d.short}</span></dt><dd>~${d.kcal} kcal</dd></div>`).join('')}
+        <div class="day-r"><dt>Sötsug och te<span>${sweetSub}</span></dt><dd>~${nf.format(roundTo(t.sweetK, 10))} kcal</dd></div>
+        <div class="day-r sum"><dt>Totalt</dt><dd>~${nf.format(roundTo(t.kcal, 10))} kcal<span>~${roundTo(t.prot, 5)} g protein</span></dd></div>
+      </dl>
+      <p class="hint">För att hålla vikten behöver du runt ${nf.format(MAINTENANCE)} kcal om dagen, ${diffTxt}. Sötsuget räknas på antalet kvällar du har valt i inköpslistan.</p>
+    </article>
+    <article class="card">
+      <div class="block-h"><h2 class="h3">Rotation</h2><span class="meta">en kombo per vecka</span></div>
+      <div class="rot">
+        ${ORDER.map((x, i) => `<div class="rot-i${x === c ? ' is-now' : ''}" style="--lid:var(--${x.toLowerCase()})">
+          <span class="rot-w">Vecka ${i + 1}</span><span class="letter">${x}</span><span class="rot-d">${names(x).join(' + ')}</span>${x === c ? '<span class="now">Vald nu</span>' : ''}</div>`).join('')}
+      </div>
+      <div class="block">
+        <button class="btn primary" type="button" data-act="next-week" style="--accent:var(--${nx.toLowerCase()})">Ny vecka: byt till Combo ${nx}</button>
+        <p class="hint">Väljer ${nn[0]} + ${nn[1]} och nollställer den kombons inköpslista och receptsteg. Efter C börjar du om på A.</p>
+      </div>
+    </article>
+    <article class="card">
+      <h2 class="h3">Laktosfritt</h2>
+      <p style="margin:0">Använd laktosfria produkter som kvarg, mjölk, fetaost och matlagningsgrädde, eller växtbaserade alternativ som soja-, havre- eller kokosprodukter.</p>
+    </article>
+  `;
+}
+
+/* ---------- Navigering ---------- */
+
+function showTab(){
+  TABS.forEach(t => { $('#view-' + t).hidden = t !== S.tab; });
+  document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === S.tab)));
+}
+function setTab(t){
+  if (!TABS.includes(t)) return;
+  S.tab = t; save(); showTab(); window.scrollTo(0, 0);
+}
+function setCombo(c){
+  if (!ORDER.includes(c)) return;
+  S.combo = c; save();
+  document.body.dataset.combo = c;
+  renderLids(); renderHandla(); renderRecept(); renderVeckan();
+}
+
+let toastTimer = null;
+function toast(msg, label, fn){
+  const el = $('#toast');
+  el.textContent = msg; el.hidden = false;
+  if (label && fn) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = label;
+    b.addEventListener('click', () => { clearTimeout(toastTimer); el.hidden = true; fn(); });
+    el.append(b);
+  }
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, label ? 5000 : 2600);
+}
+
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act === 'combo') setCombo(t.dataset.c);
+  else if (act === 'tab') setTab(t.dataset.tab);
+  else if (act === 'dish') { S.dish[S.combo] = Number(t.dataset.i); save(); renderRecept(); }
+  else if (act === 'step') {
+    const id = t.dataset.d, i = Number(t.dataset.i), arr = S.steps[id] || [];
+    S.steps[id] = arr.includes(i) ? arr.filter(x => x !== i) : arr.concat(i);
+    save(); renderRecept();
+  }
+  else if (act === 'steps-reset') { delete S.steps[t.dataset.d]; save(); renderRecept(); }
+  else if (act === 'sweet') {
+    const k = t.dataset.k;
+    S.sweets[k] = Math.max(0, Math.min(7, (S.sweets[k] || 0) + Number(t.dataset.d)));
+    save(); renderHandla(); renderSotsug(); renderRecept(); renderVeckan();
+  }
+  else if (act === 'breakfast') {
+    S.breakfast = Math.max(0, Math.min(7, (S.breakfast || 0) + Number(t.dataset.d)));
+    save(); renderHandla(); renderRecept(); renderVeckan();
+  }
+  else if (act === 'own-del') {
+    const idx = S.custom.findIndex(i => i.id === t.dataset.u);
+    if (idx < 0) return;
+    const [gone] = S.custom.splice(idx, 1);
+    save(); renderHandla();
+    toast(gone.n + ' är borttagen', 'Ångra', () => { S.custom.splice(Math.min(idx, S.custom.length), 0, gone); save(); renderHandla(); });
+  }
+  else if (act === 'copy') copyList();
+  else if (act === 'reset') resetChecks(t);
+  else if (act === 'wake') setWake(!wantWake);
+  else if (act === 'goto-extras') { S.extrasOpen = true; save(); renderHandla(); setTab('handla'); }
+  else if (act === 'next-week') {
+    const n = next(S.combo);
+    S.checked[n] = [];
+    COMBOS[n].dishes.forEach(id => { delete S.steps[id]; });
+    S.dish[n] = 0;
+    // Bought one-off items leave the list; weekly items come back unchecked
+    S.custom = S.custom.filter(i => i.w || !i.done);
+    S.custom.forEach(i => { i.done = false; });
+    setCombo(n); setTab('handla');
+    toast('Combo ' + n + ' är vald och listan är nollställd');
+  }
+});
+
+document.addEventListener('change', ev => {
+  const t = ev.target;
+  if (t.matches('.item input') && t.dataset.u) {
+    const i = S.custom.find(x => x.id === t.dataset.u);
+    if (i) { i.done = t.checked; save(); updateCounts(); }
+  } else if (t.matches('.item input')) {
+    const c = S.combo, k = t.dataset.k, arr = S.checked[c] || [];
+    S.checked[c] = t.checked ? (arr.includes(k) ? arr : arr.concat(k)) : arr.filter(x => x !== k);
+    save(); updateCounts();
+  } else if (t.id === 'te-toggle') {
+    S.sweets.te = t.checked; save(); renderHandla(); renderRecept(); renderVeckan();
+  }
+});
+
+document.addEventListener('submit', ev => {
+  if (ev.target.id !== 'add-form') return;
+  ev.preventDefault();
+  const name = $('#add-name').value.trim().replace(/\s+/g, ' ');
+  if (!name) { $('#add-name').focus(); toast('Skriv vad du vill lägga till'); return; }
+  const sec = $('#add-sec').value;
+  const item = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    n: name.slice(0, 60), q: $('#add-qty').value.trim().slice(0, 20),
+    s: SECTIONS.some(x => x.id === sec) ? sec : 'ovrigt', w: $('#add-weekly').checked, done: false
+  };
+  S.custom.push(item); S.addSec = item.s; S.addOpen = true; save();
+  renderHandla();
+  $('#add-name').focus();
+  toast(item.n + ' ligger nu i listan');
+});
+
+/* ---------- Start ---------- */
+document.body.dataset.combo = S.combo;
+renderWhen(); renderLids(); renderHandla(); renderRecept(); renderSotsug(); renderVeckan(); showTab();
+})();
+</script>
+<script>
+// Offline support and persistent storage for the installed app
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+</script>
+</body>
+</html>
